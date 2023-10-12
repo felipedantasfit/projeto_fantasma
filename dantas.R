@@ -71,14 +71,36 @@ vendas <- vendas %>%
 
 vendas <- subset(vendas, !is.na(Preco))
 
-#ORGANIZANDO AS CATEGORIAS JUNTAMENTE AO FATURAMENTO TOTAL DE CADA UMA#
+#ORGANIZANDO AS CATEGORIAS E O FATURAMENTO#
 
+vendas_sem_devolucao <- vendas %>%
+  filter(Motivo.Devolucao == "Não Devolvido")
+vendas_devolvidas <- vendas %>%
+  filter(Motivo.Devolucao != "Não Devolvido")
+
+vendas_faturamento_perdido_categoria <- vendas_devolvidas %>% 
+  group_by(Categoria) %>% 
+  summarise(Faturamento = sum(Preco))
 vendas_faturamento_categoria <- vendas %>% 
   group_by(Categoria) %>% 
   summarise(Faturamento = sum(Preco))
 
+vendas_faturamento_perdido_total <- vendas_faturamento_perdido_categoria %>% 
+  summarise(Faturamento.Total = sum(Faturamento))
+vendas_faturamento_total <- vendas_faturamento_categoria %>% 
+  summarise(Faturamento.Total = sum(Faturamento))
+
 #GRÁFICOS#
 
-
-
+ggplot(vendas_faturamento_categoria) +
+  aes(x = fct_reorder(Categoria, Faturamento, .desc=T), y = Faturamento, label = Faturamento) +
+  geom_bar(stat = "identity", fill = "#A11D21", width = 0.7) +
+  geom_text(
+    position = position_dodge(width = .9),
+    vjust = -0.5, #hjust = .5,
+    size = 3
+  ) +
+  labs(x = "Categoria", y = "Faturamento") +
+  theme_estat()
+ggsave("colunas_categoria_faturamento.pdf", width = 158, height = 93, units = "mm")
 
