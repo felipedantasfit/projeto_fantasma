@@ -20,7 +20,8 @@ theme_estat <- function(...) {
     )
 }
 
-#arrumando os bancos#
+#ARRUMANDO OS BANCOS#
+
 vendas <- rename(vendas, Motivo.Devolucao = Motivo.devolução)
 vendas <- rename(vendas, ID.Produto = Product.ID)
 vendas <- rename(vendas, ID.Usuario = User.ID)
@@ -69,3 +70,15 @@ vendas <- vendas %>%
   mutate(Tamanho = ifelse(is.na(Tamanho), "Desconhecido", Tamanho))
 
 vendas <- subset(vendas, !is.na(Preco))
+
+#ORGANIZANDO AS CATEGORIAS JUNTAMENTE AO FATURAMENTO TOTAL DE CADA UMA#
+
+vendas_faturamento_categoria <- vendas %>% 
+  group_by(Categoria) %>% 
+  summarise(Faturamento = sum(Preco))
+
+#GRÁFICOS#
+
+
+
+
