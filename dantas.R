@@ -21,6 +21,7 @@ theme_estat <- function(...) {
 }
 
 #ARRUMANDO OS BANCOS#
+library(tidyverse)
 
 vendas <- rename(vendas, Motivo.Devolucao = Motivo.devolução)
 vendas <- rename(vendas, ID.Produto = Product.ID)
@@ -103,6 +104,23 @@ ggsave("colunas_categoria_faturamento.pdf", width = 158, height = 93, units = "m
 
 vendas$Marca <- factor(vendas$Marca)
 
+by(vendas$Preco, vendas$Marca, quantile)
+by(vendas$Preco, vendas$Marca, mean)
+
+min <- c(10,10,10,10,10)
+quartil1 <- c(41,37,38,38.5,44)
+mediana <- c(52,50,49,50,54)
+quartil3 <- c(62,61,59,61,63.5)
+max <- c(96,92,100,90,90)
+media <- c(51.75587,49.69849,49.40306,49.60352,53.39409)
+
+sd(min)
+sd(quartil1)
+sd(mediana)
+sd(quartil3)
+sd(max)
+sd(media)
+
 #GRAFICOS#
 
 ggplot(vendas) +
@@ -114,5 +132,4 @@ ggplot(vendas) +
   labs(x = "Marca", y = "Preço") +
   theme_estat()
 ggsave("box_marcapreco.pdf", width = 158, height = 93, units = "mm")
-
 
