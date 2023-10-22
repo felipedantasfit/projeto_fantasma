@@ -55,22 +55,17 @@ vendas$Categoria[vendas$Categoria == "Men's Fashion"] <- "Moda Masculina"
 vendas$Categoria[vendas$Categoria == "Kids' Fashion"] <- "Moda Infantil"
 
 vendas <- vendas %>%
-  mutate(Nome.Produto = ifelse(is.na(Nome.Produto), "Desconhecido", Nome.Produto))
-vendas <- vendas %>%
   mutate(Motivo.Devolucao = ifelse(is.na(Motivo.Devolucao), "Não Devolvido", Motivo.Devolucao))
-vendas <- vendas %>%
-  mutate(Categoria = ifelse(is.na(Categoria), "Desconhecida", Categoria))
-vendas <- vendas %>%
-  mutate(Data.Venda = ifelse(is.na(Data.Venda), "Desconhecida", Data.Venda))
-vendas <- vendas %>%
-  mutate(Marca = ifelse(is.na(Marca), "Desconhecida", Marca))
-vendas <- vendas %>%
-  mutate(Cor = ifelse(is.na(Cor), "Desconhecida", Cor))
-vendas <- vendas %>%
-  mutate(Tamanho = ifelse(is.na(Tamanho), "Desconhecido", Tamanho))
 
 vendas <- subset(vendas, !is.na(Preco))
+vendas <- subset(vendas, !is.na(Marca))
+vendas <- subset(vendas, !is.na(Nome.Produto))
+vendas <- subset(vendas, !is.na(Categoria))
+vendas <- subset(vendas, !is.na(Data.Venda))
+vendas <- subset(vendas, !is.na(Cor))
+vendas <- subset(vendas, !is.na(Tamanho))
 
+##ANALISE 1##
 #ORGANIZANDO AS CATEGORIAS E O FATURAMENTO#
 
 vendas_sem_devolucao <- vendas %>%
@@ -90,7 +85,7 @@ vendas_faturamento_perdido_total <- vendas_faturamento_perdido_categoria %>%
 vendas_faturamento_total <- vendas_faturamento_categoria %>% 
   summarise(Faturamento.Total = sum(Faturamento))
 
-#GRÁFICOS#
+#GRAFICOS#
 
 ggplot(vendas_faturamento_categoria) +
   aes(x = fct_reorder(Categoria, Faturamento, .desc=T), y = Faturamento, label = Faturamento) +
@@ -103,4 +98,21 @@ ggplot(vendas_faturamento_categoria) +
   labs(x = "Categoria", y = "Faturamento") +
   theme_estat()
 ggsave("colunas_categoria_faturamento.pdf", width = 158, height = 93, units = "mm")
+
+##ANALISE 2##
+
+vendas$Marca <- factor(vendas$Marca)
+
+#GRAFICOS#
+
+ggplot(vendas) +
+  aes(x = Marca, y = Preco) +
+  geom_boxplot(fill = c("#A11D21"), width = 0.5) +
+  stat_summary(
+    fun = "mean", geom = "point", shape = 23, size = 3, fill = "white"
+  ) +
+  labs(x = "Marca", y = "Preço") +
+  theme_estat()
+ggsave("box_marcapreco.pdf", width = 158, height = 93, units = "mm")
+
 
