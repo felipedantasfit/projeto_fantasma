@@ -65,6 +65,9 @@ vendas <- subset(vendas, !is.na(Categoria))
 vendas <- subset(vendas, !is.na(Data.Venda))
 vendas <- subset(vendas, !is.na(Cor))
 vendas <- subset(vendas, !is.na(Tamanho))
+vendas <- subset(vendas, !is.na(ID.Usuario))
+vendas <- subset(vendas, !is.na(ID.Produto))
+vendas <- subset(vendas, !is.na(Avaliacao))
 
 ##ANALISE 1##
 #ORGANIZANDO AS CATEGORIAS E O FATURAMENTO#
@@ -133,3 +136,43 @@ ggplot(vendas) +
   theme_estat()
 ggsave("box_marcapreco.pdf", width = 158, height = 93, units = "mm")
 
+##ANALISE 3##
+
+#relação entre categorias (feminino e masculino e cor)#
+
+vendas_masc_fem <- vendas %>% 
+  filter(Categoria != "Moda Infantil")
+
+#GRAFICOS#
+
+cores_desejadas <- c("Azul" = "#2986cc", "Vermelho" = "#f44336", "Preto" = "#444444", "Branco" = "#d5d5d5", "Amarelo" = "#e4de07", "Verde" = "#78d51c")
+
+categoria_cor <- vendas_masc_fem %>%
+  mutate(Categoria = case_when(
+    Categoria %>% str_detect("Moda Feminina") ~ "Moda Feminina",
+    Categoria %>% str_detect("Moda Masculina") ~ "Moda Masculina"
+  )) %>%
+  group_by(Categoria, Cor) %>%
+  summarise(freq = n()) %>%
+  mutate(
+    freq_relativa = scales::percent(freq / sum(freq))
+  )
+
+porcentagens <- str_c(categoria_cor$freq_relativa) %>% str_replace("\\.", ",")
+
+legendas <- str_squish(str_c(categoria_cor$freq, " (", porcentagens, ")"))
+
+ggplot(categoria_cor) +
+  aes(
+    x = fct_reorder(Categoria, freq, .desc = TRUE), y = freq, fill = Cor, label = legendas
+  ) +
+  geom_col(position = position_dodge2(preserve = "single", padding = 0)) +
+  geom_text(
+    position = position_dodge(width = 0.9),
+    vjust = -0.5, hjust = 0.5,
+    size = 3
+  ) +
+  labs(x = "Categoria", y = "Cor") +
+  theme_estat() +
+  scale_fill_manual(values = cores_desejadas)
+ggsave("colunas_cat_cor.pdf", width = 158, height = 93, units = "mm")
