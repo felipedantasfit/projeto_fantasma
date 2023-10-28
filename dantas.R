@@ -176,3 +176,13 @@ ggplot(categoria_cor) +
   theme_estat() +
   scale_fill_manual(values = cores_desejadas)
 ggsave("colunas_cat_cor.pdf", width = 158, height = 93, units = "mm")
+
+dados_resumidos <- vendas_masc_fem %>%
+  group_by(Categoria, Cor) %>%
+  summarise(Frequencia = n())
+
+ggplot(dados_resumidos, aes(x = Categoria, y = Frequencia, fill = Cor)) +
+  geom_bar(stat = "identity", position = "fill") +
+  labs(x = "Categoria", y = "Frequência", fill = "Cor") +
+  scale_fill_manual(values = cores_desejadas)
+
