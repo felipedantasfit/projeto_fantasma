@@ -162,27 +162,30 @@ porcentagens <- str_c(categoria_cor$freq_relativa) %>% str_replace("\\.", ",")
 
 legendas <- str_squish(str_c(categoria_cor$freq, " (", porcentagens, ")"))
 
+categoria_cor <- categoria_cor %>%
+  ungroup()
+
 ggplot(categoria_cor) +
   aes(
-    x = fct_reorder(Categoria, freq, .desc = TRUE), y = freq, fill = Cor, label = legendas
+    x = fct_reorder(Categoria, freq, .desc = TRUE), y = freq, fill = Cor,
+    label = str_c(freq, "\n", porcentagens)
   ) +
   geom_col(position = position_dodge2(preserve = "single", padding = 0)) +
   geom_text(
     position = position_dodge(width = 0.9),
-    vjust = -0.5, hjust = 0.5,
-    size = 3
+    vjust = 0.45,
+    size = 2.8,
+    angle = 0
   ) +
-  labs(x = "Categoria", y = "Cor") +
+  labs(x = "Categoria", y = "Frequência") +
   theme_estat() +
   scale_fill_manual(values = cores_desejadas)
-ggsave("colunas_cat_cor.pdf", width = 158, height = 93, units = "mm")
+ggsave("colunas_categ_cor.pdf", width = 158, height = 110, units = "mm")
 
-dados_resumidos <- vendas_masc_fem %>%
-  group_by(Categoria, Cor) %>%
-  summarise(Frequencia = n())
+#TESTE DO QUI-QUADRADO#
 
-ggplot(dados_resumidos, aes(x = Categoria, y = Frequencia, fill = Cor)) +
-  geom_bar(stat = "identity", position = "fill") +
-  labs(x = "Categoria", y = "Frequência", fill = "Cor") +
-  scale_fill_manual(values = cores_desejadas)
+tabela_contingencia <- table(vendas$Categoria, vendas$Cor)
+resultado_qui_quadrado <- chisq.test(tabela_contingencia)
+print(resultado_qui_quadrado)
+
 
