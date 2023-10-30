@@ -204,3 +204,9 @@ ggplot(vendas) +
   ) +
   theme_estat()
 ggsave("disp_uni.pdf", width = 158, height = 93, units = "mm")
+
+#TESTE DE PEARSON#
+
+cor.test(vendas$Preco, vendas$Avaliacao)
+
+##ANALISE 5##
