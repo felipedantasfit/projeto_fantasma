@@ -55,9 +55,6 @@ vendas$Categoria[vendas$Categoria == "Women's Fashion"] <- "Moda Feminina"
 vendas$Categoria[vendas$Categoria == "Men's Fashion"] <- "Moda Masculina"
 vendas$Categoria[vendas$Categoria == "Kids' Fashion"] <- "Moda Infantil"
 
-vendas <- vendas %>%
-  mutate(Motivo.Devolucao = ifelse(is.na(Motivo.Devolucao), "Não Devolvido", Motivo.Devolucao))
-
 vendas <- subset(vendas, !is.na(Preco))
 vendas <- subset(vendas, !is.na(Marca))
 vendas <- subset(vendas, !is.na(Nome.Produto))
@@ -71,6 +68,14 @@ vendas <- subset(vendas, !is.na(Avaliacao))
 
 vendas <- vendas %>% 
   distinct(ID.Produto, .keep_all = TRUE)
+
+vendas <- vendas[, !names(vendas) %in% "Motivo.Devolucao"]
+vendas <- vendas %>%
+  left_join(devolucao, by = "ID.Unico")
+vendas$...1.y <- NULL
+vendas <- vendas %>%
+  mutate(Motivo.Devolucao = ifelse(is.na(Motivo.Devolucao), "Não Devolvido", Motivo.Devolucao))
+
 ##ANALISE 1##
 #ORGANIZANDO AS CATEGORIAS E O FATURAMENTO#
 
@@ -164,25 +169,23 @@ porcentagens <- str_c(categoria_cor$freq_relativa) %>% str_replace("\\.", ",")
 
 legendas <- str_squish(str_c(categoria_cor$freq, " (", porcentagens, ")"))
 
-categoria_cor <- categoria_cor %>%
-  ungroup()
-
 ggplot(categoria_cor) +
   aes(
-    x = fct_reorder(Categoria, freq, .desc = TRUE), y = freq, fill = Cor,
-    label = str_c(freq, "\n", porcentagens)
+    x = freq, fill = Categoria, y = fct_reorder(Cor, freq, .desc = TRUE),
+    label = legendas
   ) +
   geom_col(position = position_dodge2(preserve = "single", padding = 0)) +
   geom_text(
     position = position_dodge(width = 0.9),
     vjust = 0.45,
     size = 2.8,
+    hjust = 0,
     angle = 0
   ) +
-  labs(x = "Categoria", y = "Frequência") +
-  theme_estat() +
-  scale_fill_manual(values = cores_desejadas)
-ggsave("colunas_categ_cor.pdf", width = 158, height = 110, units = "mm")
+  xlim(0,80)+
+  labs(x = "Frequência", y = "Cor") +
+  theme_estat() 
+ggsave("barras_categ_cor.pdf", width = 158, height = 110, units = "mm")
 
 #TESTE DO QUI-QUADRADO#
 
@@ -210,3 +213,4 @@ ggsave("disp_uni.pdf", width = 158, height = 93, units = "mm")
 cor.test(vendas$Preco, vendas$Avaliacao)
 
 ##ANALISE 5##
+#frequencia de cada tipo de devolução por marca#
