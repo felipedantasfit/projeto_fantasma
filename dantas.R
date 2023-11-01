@@ -72,7 +72,9 @@ vendas <- vendas %>%
 vendas <- vendas[, !names(vendas) %in% "Motivo.Devolucao"]
 vendas <- vendas %>%
   left_join(devolucao, by = "ID.Unico")
-vendas$...1.y <- NULL
+#vendas$...1.y <- NULL
+#vendas$...1.x <- NULL
+#vendas$X.y <- NULL
 vendas <- vendas %>%
   mutate(Motivo.Devolucao = ifelse(is.na(Motivo.Devolucao), "Não Devolvido", Motivo.Devolucao))
 
