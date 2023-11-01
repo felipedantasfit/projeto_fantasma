@@ -143,7 +143,7 @@ ggplot(vendas) +
   ) +
   labs(x = "Marca", y = "Preço") +
   theme_estat()
-ggsave("box_marcapreco.pdf", width = 158, height = 93, units = "mm")
+  ggsave("box_marcapreco.pdf", width = 158, height = 93, units = "mm")
 
 ##ANALISE 3##
 
@@ -216,3 +216,42 @@ cor.test(vendas$Preco, vendas$Avaliacao)
 
 ##ANALISE 5##
 #frequencia de cada tipo de devolução por marca#
+vendas_dev <- vendas %>% 
+  filter(Motivo.Devolucao != "Não Devolvido")
+
+marca_dev <- vendas_dev %>%
+  mutate(Marca = case_when(
+    Marca %>% str_detect("Adidas") ~ "Adidas",
+    Marca %>% str_detect("Gucci") ~ "Gucci",
+    Marca %>% str_detect("H&M") ~ "H&M",
+    Marca %>% str_detect("Nike") ~ "Nike",
+    Marca %>% str_detect("Zara") ~ "Zara",
+  )) %>%
+  group_by(Marca, Motivo.Devolucao) %>%
+  summarise(freq = n()) %>%
+  mutate(
+    freq_relativa = scales::percent(freq / sum(freq))
+  )
+
+marca_dev <- marca_dev %>% 
+  ungroup()
+
+porcentagens2 <- str_c(marca_dev$freq_relativa) %>% str_replace("\\.", ",")
+
+legendas2 <- str_squish(str_c(marca_dev$freq, " (", porcentagens2, ")"))
+
+ggplot(marca_dev) +
+  aes(
+    x = fct_reorder(Marca, freq, .desc = T), y = freq,
+    fill = Motivo.Devolucao, label = str_c(freq, "\n", porcentagens2)
+  ) +
+  geom_col(position = position_dodge2(preserve = "single", padding = 0)) +
+  geom_text(
+    position = position_dodge(width = .9),
+    vjust = -0.15, hjust = 0.5,
+    size = 2.5
+  ) +
+  labs(x = "Marca", y = "Frequência", fill = "Motivo da devolução") +
+  ylim(0,40) +
+  theme_estat()
+ggsave("marca_dev_freq.pdf", width = 158, height = 93, units = "mm")
