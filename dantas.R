@@ -81,58 +81,59 @@ vendas <- vendas %>%
 ##ANALISE 1##
 #ORGANIZANDO AS CATEGORIAS E O FATURAMENTO#
 
-vendas_sem_devolucao <- vendas %>%
-  filter(Motivo.Devolucao == "Não Devolvido")
-vendas_devolvidas <- vendas %>%
-  filter(Motivo.Devolucao != "Não Devolvido")
+library(lubridate)
 
-vendas_faturamento_perdido_categoria <- vendas_devolvidas %>% 
-  group_by(Categoria) %>% 
-  summarise(Faturamento = sum(Preco))
-vendas_faturamento_categoria <- vendas %>% 
-  group_by(Categoria) %>% 
+vendas$Data.Venda <- mdy(vendas$Data.Venda)
+vendas$Mes <- month(vendas$Data.Venda)
+vendas$Mes <- as.character(vendas$Mes)
+
+vendas$Mes[vendas$Mes == "1"] <- "Jan"
+vendas$Mes[vendas$Mes == "2"] <- "Fev"
+vendas$Mes[vendas$Mes == "3"] <- "Mar"
+vendas$Mes[vendas$Mes == "4"] <- "Abr"
+vendas$Mes[vendas$Mes == "5"] <- "Mai"
+vendas$Mes[vendas$Mes == "6"] <- "Jun"
+vendas$Mes[vendas$Mes == "7"] <- "Jul"
+vendas$Mes[vendas$Mes == "8"] <- "Ago"
+vendas$Mes[vendas$Mes == "9"] <- "Set"
+vendas$Mes[vendas$Mes == "10"] <- "Out"
+vendas$Mes[vendas$Mes == "11"] <- "Nov"
+vendas$Mes[vendas$Mes == "12"] <- "Dez"
+
+vendas_fatcat <- vendas %>% 
+  group_by(Categoria, Mes) %>%
   summarise(Faturamento = sum(Preco))
 
-vendas_faturamento_perdido_total <- vendas_faturamento_perdido_categoria %>% 
-  summarise(Faturamento.Total = sum(Faturamento))
-vendas_faturamento_total <- vendas_faturamento_categoria %>% 
-  summarise(Faturamento.Total = sum(Faturamento))
+vendas_fatcat$Mes <- factor(vendas_fatcat$Mes, levels = c(
+  "Jan", "Fev", "Mar", "Abr", "Mai", "Jun",
+  "Jul", "Ago", "Set", "Out", "Nov", "Dez"
+))
 
 #GRAFICOS#
 
-ggplot(vendas_faturamento_categoria) +
-  aes(x = fct_reorder(Categoria, Faturamento, .desc=T), y = Faturamento, label = Faturamento) +
-  geom_bar(stat = "identity", fill = "#A11D21", width = 0.7) +
-  geom_text(
-    position = position_dodge(width = .9),
-    vjust = -0.5, #hjust = .5,
-    size = 3
-  ) +
-  labs(x = "Categoria", y = "Faturamento") +
-  theme_estat()
-ggsave("colunas_categoria_faturamento.pdf", width = 158, height = 93, units = "mm")
+ggplot(vendas_fatcat) +
+  aes(x = Mes, y = Faturamento, group = Categoria, colour = Categoria) +
+  geom_line(size = 1) +
+  geom_point(size = 2) +
+  scale_colour_manual(name = "Categoria", labels = c("Moda Feminina", "Moda Infantil", "Moda Masculina")) +
+  labs(x = "Mês", y = "Faturamento")
+ggsave("Linha_fatcat.pdf", width = 158, height = 93, units = "mm")
 
 ##ANALISE 2##
 
 vendas$Marca <- factor(vendas$Marca)
 
-by(vendas$Preco, vendas$Marca, quantile)
-by(vendas$Preco, vendas$Marca, mean)
-
-min <- c(10,10,10,10,10)
-quartil1 <- c(41,37,38,38.5,44)
-mediana <- c(52,50,49,50,54)
-quartil3 <- c(62,61,59,61,63.5)
-max <- c(96,92,100,90,90)
-media <- c(51.75587,49.69849,49.40306,49.60352,53.39409)
-
-sd(min)
-sd(quartil1)
-sd(mediana)
-sd(quartil3)
-sd(max)
-sd(media)
-
+quadro_resumo <- vendas %>% 
+  group_by(Marca) %>% # caso mais de uma categoria
+  summarize(Média = round(mean(Preco),2),
+            `Desvio Padrão` = round(sd(Preco),2),
+            `Variância` = round(var(Preco),2),
+            `Mínimo` = round(min(Preco),2),
+            `1º Quartil` = round(quantile(Preco, probs = .25),2),
+            Mediana = round(quantile(Preco, probs = .5),2),
+            `3º Quartil` = round(quantile(Preco, probs = .75),2),
+            `Máximo` = round(max(Preco),2)) %>% t() %>% as.data.frame() %>% 
+  mutate(V1 = str_replace(V1,"\\.",",")) 
 #GRAFICOS#
 
 ggplot(vendas) +
@@ -143,7 +144,7 @@ ggplot(vendas) +
   ) +
   labs(x = "Marca", y = "Preço") +
   theme_estat()
-  ggsave("box_marcapreco.pdf", width = 158, height = 93, units = "mm")
+ggsave("box_marcapreco.pdf", width = 158, height = 93, units = "mm")
 
 ##ANALISE 3##
 
@@ -191,7 +192,7 @@ ggsave("barras_categ_cor.pdf", width = 158, height = 110, units = "mm")
 
 #TESTE DO QUI-QUADRADO#
 
-tabela_contingencia <- table(vendas$Categoria, vendas$Cor)
+tabela_contingencia <- table(vendas_masc_fem$Categoria, vendas_masc_fem$Cor)
 resultado_qui_quadrado <- chisq.test(tabela_contingencia)
 print(resultado_qui_quadrado)
 
@@ -255,3 +256,9 @@ ggplot(marca_dev) +
   ylim(0,40) +
   theme_estat()
 ggsave("marca_dev_freq.pdf", width = 158, height = 93, units = "mm")
+
+#TESTE QUI-QUADRADO#
+
+tabela_contingencia2 <- table(vendas_dev$Marca, vendas_dev$Motivo.Devolucao)
+resultado_qui_quadrado2 <- chisq.test(tabela_contingencia2)
+print(resultado_qui_quadrado2)
