@@ -23,6 +23,9 @@ theme_estat <- function(...) {
 #ARRUMANDO OS BANCOS#
 library(tidyverse)
 
+vendas <- read.csv("vendas.csv")
+devolucao <- read.csv("devolução.csv")
+
 vendas <- rename(vendas, Motivo.Devolucao = Motivo.devolução)
 vendas <- rename(vendas, ID.Produto = Product.ID)
 vendas <- rename(vendas, ID.Usuario = User.ID)
@@ -55,16 +58,17 @@ vendas$Categoria[vendas$Categoria == "Women's Fashion"] <- "Moda Feminina"
 vendas$Categoria[vendas$Categoria == "Men's Fashion"] <- "Moda Masculina"
 vendas$Categoria[vendas$Categoria == "Kids' Fashion"] <- "Moda Infantil"
 
-vendas <- subset(vendas, !is.na(Preco))
-vendas <- subset(vendas, !is.na(Marca))
-vendas <- subset(vendas, !is.na(Nome.Produto))
-vendas <- subset(vendas, !is.na(Categoria))
-vendas <- subset(vendas, !is.na(Data.Venda))
-vendas <- subset(vendas, !is.na(Cor))
-vendas <- subset(vendas, !is.na(Tamanho))
-vendas <- subset(vendas, !is.na(ID.Usuario))
-vendas <- subset(vendas, !is.na(ID.Produto))
-vendas <- subset(vendas, !is.na(Avaliacao))
+#vendas <- na.omit(vendas)
+#vendas <- subset(vendas, !is.na(Preco))
+#vendas <- subset(vendas, !is.na(Marca))
+#vendas <- subset(vendas, !is.na(Nome.Produto))
+#vendas <- subset(vendas, !is.na(Categoria))
+#vendas <- subset(vendas, !is.na(Data.Venda))
+#vendas <- subset(vendas, !is.na(Cor))
+#vendas <- subset(vendas, !is.na(Tamanho))
+#vendas <- subset(vendas, !is.na(ID.Usuario))
+#vendas <- subset(vendas, !is.na(ID.Produto))
+#vendas <- subset(vendas, !is.na(Avaliacao))
 
 vendas <- vendas %>% 
   distinct(ID.Produto, .keep_all = TRUE)
@@ -72,9 +76,11 @@ vendas <- vendas %>%
 vendas <- vendas[, !names(vendas) %in% "Motivo.Devolucao"]
 vendas <- vendas %>%
   left_join(devolucao, by = "ID.Unico")
-#vendas$...1.y <- NULL
-#vendas$...1.x <- NULL
-#vendas$X.y <- NULL
+vendas$...1.y <- NULL
+vendas$...1.x <- NULL
+vendas$X.y <- NULL
+vendas$X.x <- NULL
+
 vendas <- vendas %>%
   mutate(Motivo.Devolucao = ifelse(is.na(Motivo.Devolucao), "Não Devolvido", Motivo.Devolucao))
 
@@ -262,3 +268,12 @@ ggsave("marca_dev_freq.pdf", width = 158, height = 93, units = "mm")
 tabela_contingencia2 <- table(vendas_dev$Marca, vendas_dev$Motivo.Devolucao)
 resultado_qui_quadrado2 <- chisq.test(tabela_contingencia2)
 print(resultado_qui_quadrado2)
+
+##ANALISE 6##
+
+vendas_ava_marca <- subset(vendas, !is.na(Avaliacao))
+vendas_ava_marca <- subset(vendas_ava_marca, !is.na(Marca))
+
+media_ava <- vendas_ava_marca %>% 
+  group_by(Marca) %>%
+  summarize(Média = round(mean(Avaliacao),2))
