@@ -106,7 +106,12 @@ vendas$Mes[vendas$Mes == "10"] <- "Out"
 vendas$Mes[vendas$Mes == "11"] <- "Nov"
 vendas$Mes[vendas$Mes == "12"] <- "Dez"
 
-vendas_fatcat <- vendas %>% 
+vendas_fatcat <- subset(vendas, !is.na(Data.Venda))
+vendas_fatcat <- subset(vendas_fatcat, !is.na(Preco))
+vendas_fatcat <- subset(vendas_fatcat, !is.na(Categoria))
+
+
+vendas_fatcat <- vendas_fatcat %>% 
   group_by(Categoria, Mes) %>%
   summarise(Faturamento = sum(Preco))
 
@@ -122,14 +127,18 @@ ggplot(vendas_fatcat) +
   geom_line(size = 1) +
   geom_point(size = 2) +
   scale_colour_manual(name = "Categoria", labels = c("Moda Feminina", "Moda Infantil", "Moda Masculina")) +
-  labs(x = "Mês", y = "Faturamento")
+  labs(x = "Mês", y = "Faturamento") +
+  theme_estat()
 ggsave("Linha_fatcat.pdf", width = 158, height = 93, units = "mm")
 
 ##ANALISE 2##
 
 vendas$Marca <- factor(vendas$Marca)
 
-quadro_resumo <- vendas %>% 
+vendas_prec_marc <- subset(vendas, !is.na(Preco))
+vendas_prec_marc <- subset(vendas_prec_marc, !is.na(Marca))
+
+quadro_resumo <- vendas_prec_marc %>% 
   group_by(Marca) %>% # caso mais de uma categoria
   summarize(Média = round(mean(Preco),2),
             `Desvio Padrão` = round(sd(Preco),2),
@@ -142,7 +151,7 @@ quadro_resumo <- vendas %>%
   mutate(V1 = str_replace(V1,"\\.",",")) 
 #GRAFICOS#
 
-ggplot(vendas) +
+ggplot(vendas_prec_marc) +
   aes(x = Marca, y = Preco) +
   geom_boxplot(fill = c("#A11D21"), width = 0.5) +
   stat_summary(
@@ -158,6 +167,10 @@ ggsave("box_marcapreco.pdf", width = 158, height = 93, units = "mm")
 
 vendas_masc_fem <- vendas %>% 
   filter(Categoria != "Moda Infantil")
+
+vendas_masc_fem <- subset(vendas_masc_fem, !is.na(Categoria))
+vendas_masc_fem <- subset(vendas_masc_fem, !is.na(Cor))
+
 
 #GRAFICOS#
 
