@@ -218,9 +218,12 @@ print(resultado_qui_quadrado)
 ##ANALISE 4##
 #relação entre preço e avaliação#
 
+vendas_prec_ava <- subset(vendas, !is.na(Preco))
+vendas_prec_ava <- subset(vendas_prec_ava, !is.na(Avaliacao))
+
 #GRAFICO#
 
-ggplot(vendas) +
+ggplot(vendas_prec_ava) +
   aes(x = Preco, y = Avaliacao) +
   geom_point(colour = "#A11D21", size = 3) +
   labs(
@@ -230,13 +233,25 @@ ggplot(vendas) +
   theme_estat()
 ggsave("disp_uni.pdf", width = 158, height = 93, units = "mm")
 
+#TABELA#
+
+mean(vendas_prec_ava$Preco)
+sd(vendas_prec_ava$Preco)
+quantile(vendas_prec_ava$Preco)
+
+mean(vendas_prec_ava$Avaliacao)
+sd(vendas_prec_ava$Avaliacao)
+quantile(vendas_prec_ava$Avaliacao)
+
 #TESTE DE PEARSON#
 
-cor.test(vendas$Preco, vendas$Avaliacao)
+cor.test(vendas_prec_ava$Preco, vendas_prec_ava$Avaliacao)
 
 ##ANALISE 5##
 #frequencia de cada tipo de devolução por marca#
+
 vendas_dev <- vendas %>% 
+  subset(!is.na(Marca)) %>% 
   filter(Motivo.Devolucao != "Não Devolvido")
 
 marca_dev <- vendas_dev %>%
@@ -256,9 +271,9 @@ marca_dev <- vendas_dev %>%
 marca_dev <- marca_dev %>% 
   ungroup()
 
-porcentagens2 <- str_c(marca_dev$freq_relativa) %>% str_replace("\\.", ",")
+porcentagens2 <- str_c("(", str_replace_all(marca_dev$freq_relativa, "\\.", ","), ")")
 
-legendas2 <- str_squish(str_c(marca_dev$freq, " (", porcentagens2, ")"))
+legendas2 <- str_squish(str_c(marca_dev$freq, " ", porcentagens2))
 
 ggplot(marca_dev) +
   aes(
