@@ -305,3 +305,17 @@ vendas_ava_marca <- subset(vendas_ava_marca, !is.na(Marca))
 media_ava <- vendas_ava_marca %>% 
   group_by(Marca) %>%
   summarize(Média = round(mean(Avaliacao),2))
+
+ggplot(media_ava) +
+  aes(x = Marca, y = Média) +
+  geom_bar(stat = "identity", fill = "#A11D21", width = 0.7) +
+  geom_text(
+    position = position_dodge(width = .9),
+    vjust = -0.5, #hjust = .5,
+    size = 3,
+    label= media_ava$Média,
+  ) + 
+  labs(x = "Marca", y = "Média") +
+  theme_estat() +
+  ylim(0,3)
+ggsave("media_ava_marca.pdf", width = 158, height = 93, units = "mm")
